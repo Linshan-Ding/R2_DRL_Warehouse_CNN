@@ -101,4 +101,4 @@ def summarise(name: str, run_dirs: Sequence[str]) -> None:
             path = os.path.join(run_dir, filename)
             if os.path.exists(path):
                 print(f"    - {filename}")
-    print("\n下一步: 右键运行 experiments/run_stats_and_plots.py 做统计聚合与出图")
+    print("\n下一步: 右键运行 experiment/run_stats_and_plots.py 做统计聚合与出图")

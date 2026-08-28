@@ -1,7 +1,5 @@
 # SAPPO —— 人机协同订单拣选优化
 
-> English version: [README_EN.md](README_EN.md)
-
 论文 *Spatially-Aware Deep Reinforcement Learning for Human-Robot Collaborative Order
 Picking Optimization in Smart Warehouse Systems*（CAIE，第二轮修订）的配套代码。
 
@@ -14,11 +12,41 @@ data/          订单流生成与固定评测算例
 environment/   仓库模型、状态、动作掩码、离散事件仿真
 agent/         CNN 编码器、策略网络与价值网络、经验缓存、PPO 更新
 baselines/     组合排序规则（以及四个 RL 基线的接入位）
-experiments/   可直接右键运行的实验脚本 —— 唯一的启动入口
+experiment/    可直接右键运行的实验脚本 —— 唯一的启动入口
 result/        日志、指标、统计检验、绘图，以及各次运行的产出目录
+paper_assets/  论文表格片段与图的生成脚本（make_tables.py 等）
 tools/         正确性闸门与原实现参考副本
-docs/          本仓库遵循的实验规格契约
+docs/          实验规格契约（experiment-spec.md）与修订日志（revision-log.md）
 ```
+
+---
+
+## 0. 第二轮返修：接下来需要运行的补充实验
+
+修订稿（R2）与回复信已在论文仓库 `R2_Jiajin_Li_Dynamic_Order_Picking_CAIE` 的
+`claude/paper-revision-rebuttal-b6slds` 分支定稿，其中仍以 `% TODO (AUTHORS)`
+注释标出了少量待补数据与待定稿措辞。**按下表顺序跑完，论文所需数据即全部齐备**：
+
+| 顺序 | 运行 | 耗时 | 产出 | 回填到论文 / 回复信 |
+|---|---|---|---|---|
+| 1 | `experiment/run_00_selfcheck.py` | 约 1 分钟 | 三道闸门 PASS | —（前置检查，必须全过） |
+| 2 | `experiment/run_e10_rules_capacity.py` | 约 10 分钟（CPU 即可） | `result/rules_c1..c5/` | §5.7.2 "U 形曲线"句的 C=4/5 数据点 |
+| 3 | `experiment/run_e9_capacity_state.py` | GPU 约 6 次训练 × 2.5–4 h | `result/e9_c2_plus_run*/`、`e9_c3_plus_run*/` | §5.7.2 与 §5.8.2 的收尾句、回复信 R1-C5 / R2-C4 两处 "待 E9" 段落 |
+| 4 | `paper_assets/make_tables.py` | 秒级 | `paper_assets/generated/*.tex` | 表 16–21 的逐字核对，外加 `tab_capacity_rules_sweep.tex`、`tab_state_capacity.tex` 两张新片段 |
+| 5 | `paper_assets/plot_warehouse_scale_figures.py` | 秒级 | `generated/Aisles.pdf`、`generated/Rack Capacity.pdf` | 覆盖论文 `Figure/` 同名文件（修正原图的副标题 / 刻度标注错误），并删除 manuscript.tex 中对应 TODO 注释 |
+
+**验收标准**：`make_tables.py` 生成片段与 manuscript.tex 对应表格的 tabular 主体
+逐字一致（现有数据下 7/7 张表已验证通过）。统计口径固定在
+`docs/experiment-spec.md`：运营配置表取 SAPPO 各配置独立训练的**最优值**、
+消融表报 **mean ± std（3 次独立训练）**、规则确定性单次评测。
+
+**仍需人工完成（非实验）**：重绘论文 Fig. 2（标注 depot 与两类示例行走路径）；
+填 Manuscript ID；把四个 RL 基线归档到 `baselines/rl/`（§10 缺口 1——这也是
+重新生成图 12–14 数据的前提）；修订稿终稿编译后核对回复信页码。
+
+**决策时间口径提醒**：论文各表的 `D̄` 列（SAPPO ≈ 7 ms、规则 ≈ 3.7–4.4 ms）来自
+作者初版管线的全流程测量；本仓库的 `decision_time_ms` 只计策略调用本身
+（SAPPO ≈ 2 ms、规则 ≈ 0.02 ms，见 §8），两者口径不同，不要混用或互相"订正"。
 
 ---
 
@@ -57,7 +85,7 @@ docs/          本仓库遵循的实验规格契约
 3. 在项目树里双击打开 `requirements.txt`，PyCharm 顶部会弹出
    **Install requirements**，点一下即可装齐依赖。
    （偏好命令行的话，在 PyCharm 终端里执行 `pip install -r requirements.txt` 等价。）
-4. 工作目录**不用管**：`experiments/` 下的脚本第一行会 `import _bootstrap`，
+4. 工作目录**不用管**：`experiment/` 下的脚本第一行会 `import _bootstrap`，
    它负责把仓库根加进 `sys.path` 并切换工作目录，所以从哪儿启动都对。
    （如果你自定义了运行配置，把 Working directory 设成仓库根目录最省事。）
 
@@ -84,7 +112,7 @@ docs/          本仓库遵循的实验规格契约
 
 ## 3. 怎么运行
 
-在项目树里找到 `experiments/` 下对应的脚本 → **右键 → Run '...'**。就这样。
+在项目树里找到 `experiment/` 下对应的脚本 → **右键 → Run '...'**。就这样。
 
 每个脚本都**不需要任何参数**，顶部有一段醒目的配置区，在 IDE 里改完再 Run 即可：
 
@@ -127,9 +155,13 @@ TIERS    = ["main"]
 | `run_e6_picktime.py` | tau_pick ∈ {15, 20} 敏感性 | R1.4 |
 | `run_e7_capacity.py` | 载运容量 C ∈ {2, 3} | R1.5 |
 | `run_e8_layout.py` | 中部横通道布局变体 | R1.3 |
+| `run_e9_capacity_state.py` | **容量 × 状态通道（新增，见 §0）** | R1.5 / R2.4 收尾句 |
+| `run_e10_rules_capacity.py` | **规则容量扫描 C ∈ {1..5}（新增，不训练）** | R1.5 的 U 形曲线句 |
 | `run_rules_only.py` | 五条规则基线（不训练） | 各表对比列 |
 | `run_stats_and_plots.py` | 统计聚合与出图 | — |
-| `run_all.py` | 按开关列表批跑 E0→E8 | — |
+| `run_all.py` | 按开关列表批跑 E0→E10 | — |
+| `paper_assets/make_tables.py` | 从 result/ 生成论文表格 LaTeX 片段 | 表 16–21 及两张新片段 |
+| `paper_assets/plot_warehouse_scale_figures.py` | 重生成图 13/14（修正标注） | 图 13/14 |
 
 **批量跑：** `run_all.py` 顶部是一个开关列表，把不想跑的注释掉再 Run。每项都注了预计耗时，
 全开会跑好几天。
@@ -138,7 +170,7 @@ TIERS    = ["main"]
 
 ## 4. 数据准备
 
-**运行：** 右键运行 `experiments/run_01_prepare_data.py`（只需要跑一次）
+**运行：** 右键运行 `experiment/run_01_prepare_data.py`（只需要跑一次）
 
 **产出：** `data/instances/{main,val,large}/*.csv` 与 `data/instances/index.csv`
 
@@ -150,7 +182,7 @@ TIERS    = ["main"]
 
 ## 5. 正确性自检
 
-**运行：** 右键运行 `experiments/run_00_selfcheck.py`
+**运行：** 右键运行 `experiment/run_00_selfcheck.py`
 
 三道闸门，全部 PASS 才值得信任后面的实验：
 
@@ -169,7 +201,7 @@ TIERS    = ["main"]
 
 论文的基准算例 C18：`1/lambda = 40`、`K = 3`、`R = 6`。
 
-**运行：** 右键运行 `experiments/run_e0_baseline.py`（`RUNS` 默认 3）
+**运行：** 右键运行 `experiment/run_e0_baseline.py`（`RUNS` 默认 3）
 
 **产出：** `result/e0_run*/{log.csv, checkpoint_best.pt, checkpoint_last.pt,
 training_cost.csv, eval_results.csv, config_snapshot.yaml}`
@@ -192,7 +224,7 @@ E0 复现不了的话，先查清原因，别急着跑后面的实验。
 论文已有的 27 个算例其实已覆盖 1:2、1:4、1:6、1:1（K=2,R=2）、2:4、2:6、3:2、3:4、3:6，
 只是没按"配比"组织过。这里补上缺的三个极端档 (K,R) = (1,1)、(3,1)、(4,2)。
 
-**运行：** 右键运行 `experiments/run_e1_ratio.py`
+**运行：** 右键运行 `experiment/run_e1_ratio.py`
 **产出：** `result/e1_k1r1_run*/`、`e1_k3r1_run*/`、`e1_k4r2_run*/` 下的
 `eval_results.csv`（含 `n_pickers`、`n_robots` 两列，可直接按配比重排成表）
 
@@ -200,7 +232,7 @@ E0 复现不了的话，先查清原因，别急着跑后面的实验。
 
 上一轮修订已经做到 K=6 / R=12（论文 Table 10），这里再加两档。
 
-**运行：** 右键运行 `experiments/run_e2_scale.py`
+**运行：** 右键运行 `experiment/run_e2_scale.py`
 **产出：** `result/e2_k8r16_run*/`、`e2_k10r20_run*/` 下的 `eval_results.csv`
 与 `training_cost.csv`
 
@@ -209,7 +241,7 @@ E0 复现不了的话，先查清原因，别急着跑后面的实验。
 不需要单独训练：每次训练都会写一份 `training_cost.csv`，这一步只是汇总。
 先跑完 E0/E1/E2 再来。
 
-**运行：** 右键运行 `experiments/run_e3_training_cost.py`
+**运行：** 右键运行 `experiment/run_e3_training_cost.py`
 **产出：** `result/training_cost_summary.csv`
 
 表里的 `n_actions` 一列同时也是"每个配置都是从零单独训练、没有跨规模权重迁移"的证据。
@@ -220,7 +252,7 @@ E0 复现不了的话，先查清原因，别急着跑后面的实验。
 `gamma < 1` 时按 Abel 分部求和多出一个 `O(1-gamma)` 的路径项，方向一致但不恒等。
 这个实验测的就是这个差别在实践中有多大。
 
-**运行：** 右键运行 `experiments/run_e4_gamma.py`（三个 gamma 各跑 `RUNS` 次，默认 3）
+**运行：** 右键运行 `experiment/run_e4_gamma.py`（三个 gamma 各跑 `RUNS` 次，默认 3）
 **产出：** `result/e4_gamma0.95_run*/`、`e4_gamma0.99_run*/`、`e4_gamma1.00_run*/`
 下的 `eval_results.csv`（含 `gamma` 一列）
 **随后：** 右键运行 `run_stats_and_plots.py`，把 `PATTERN` 设为 `"e4_*"`、
@@ -231,19 +263,19 @@ E0 复现不了的话，先查清原因，别急着跑后面的实验。
 `plus_agent` 额外给出两个通道：待路径决策机器人的剩余必访点分布、空闲资源的位置分布，
 也就是目前只有掩码看得到、状态张量里没有的那部分信息。对照组直接用 E0 的结果。
 
-**运行：** 右键运行 `experiments/run_e5_state_channels.py`（`RUNS` 默认 3）
+**运行：** 右键运行 `experiment/run_e5_state_channels.py`（`RUNS` 默认 3）
 **产出：** `result/e5_plus_run*/eval_results.csv`（含 `state_channels` 一列）
 **随后：** 右键运行 `run_stats_and_plots.py`，`PATTERN` 设为 `"e[05]_*"` 一起看两组
 
 ### E6 拣选时间敏感性（R1.4，多层货架代理）
 
-**运行：** 右键运行 `experiments/run_e6_picktime.py`
+**运行：** 右键运行 `experiment/run_e6_picktime.py`
 **产出：** `result/e6_tau15_run*/`、`e6_tau20_run*/` 下的 `eval_results.csv`
 **随后：** 右键运行 `run_stats_and_plots.py`，`SENSITIVITY_COLUMN` 设为 `"pick_time"`
 
 ### E7 机器人单次载运能力（R1.5）
 
-**运行：** 右键运行 `experiments/run_e7_capacity.py`
+**运行：** 右键运行 `experiment/run_e7_capacity.py`
 **产出：** `result/e7_c2_run*/`、`e7_c3_run*/` 下的 `eval_results.csv`
 **随后：** 右键运行 `run_stats_and_plots.py`，`SENSITIVITY_COLUMN` 设为 `"robot_capacity"`
 
@@ -253,19 +285,41 @@ E0 复现不了的话，先查清原因，别急着跑后面的实验。
 
 ### E8 中部横通道布局变体（R1.3）
 
-**运行：** 右键运行 `experiments/run_e8_layout.py`
+**运行：** 右键运行 `experiment/run_e8_layout.py`
 **产出：** `result/e8_mid_run*/eval_results.csv`（含 `layout` 一列）
+
+### E9 容量 × 状态通道（R1.5 / R2.4 的收尾句，第二轮新增）
+
+E7 显示 C=3 时 SAPPO 落后于队列均衡规则，E5 显示 C=1 下 per-robot 通道无显著收益
+（p = 0.317）。E9 检验两者合起来的假设：批量化（C > 1）是否让 per-robot 信息变得
+有用。在 C ∈ {2,3} 下训练 `plus_agent` 状态，与 E7 的 base 状态对比；训练轮数默认
+3000（E7 的 C=3 曲线在 2000 轮仍在下降，加长预算避免误判）。**两种结果都可写进论文**，
+按实际结果定稿 §5.7.2 / §5.8.2 与回复信两处 "待 E9" 段落。
+
+**运行：** 右键运行 `experiment/run_e9_capacity_state.py`（`RUNS` 默认 3）
+**产出：** `result/e9_c2_plus_run*/`、`e9_c3_plus_run*/` 下的 `eval_results.csv`
+**随后：** 右键运行 `paper_assets/make_tables.py` 生成 `tab_state_capacity.tex`；
+需要预算严格对齐的对照时，把脚本里 `BUDGET_MATCHED_BASE` 设为 `True`
+
+### E10 规则容量扫描 C ∈ {1..5}（R1.5 的 U 形曲线句，第二轮新增，不训练）
+
+论文 §5.7.2 断言"规则的批量化收益曲线呈 U 形、最低点在 C = 3 附近"，
+需要 C = 4、5 两个数据点收尾。规则确定性、免训练，全程分钟级。
+
+**运行：** 右键运行 `experiment/run_e10_rules_capacity.py`
+**产出：** `result/rules_c1/ ... rules_c5/` 下的 `eval_results.csv`
+**随后：** 右键运行 `paper_assets/make_tables.py` 生成 `tab_capacity_rules_sweep.tex`
 
 ### 只跑规则基线（不需要训练，几分钟）
 
 规则是确定性的，跑一次就够；这份结果是所有新表的对比列来源。
 
-**运行：** 右键运行 `experiments/run_rules_only.py`
+**运行：** 右键运行 `experiment/run_rules_only.py`
 **产出：** `result/rules_main/eval_results.csv`
 
 ### 冒烟测试（几分钟确认环境没装错）
 
-**运行：** 右键运行 `experiments/run_smoke.py`
+**运行：** 右键运行 `experiment/run_smoke.py`
 **产出：** `result/smoke_run1/` 下的全套文件
 
 训练轮数太少，学不到任何东西——这一步只证明链路通。
@@ -274,7 +328,7 @@ E0 复现不了的话，先查清原因，别急着跑后面的实验。
 
 ## 8. 统计聚合与绘图
 
-**运行：** 右键运行 `experiments/run_stats_and_plots.py`
+**运行：** 右键运行 `experiment/run_stats_and_plots.py`
 **产出：** `result/stats_summary.csv` 与 `result/figures/*.pdf|.png`
 
 脚本顶部有三个常改的开关：
@@ -317,10 +371,15 @@ SAPPO 做**配对**检验（配对 t 检验、Wilcoxon 符号秩检验、Cohen's
 | `result/e7_*/eval_results.csv` | `run_e7_capacity.py` | 载运容量敏感性（R1.5） |
 | `result/e8_*/eval_results.csv` | `run_e8_layout.py` | 布局变体（R1.3） |
 | `result/rules_main/eval_results.csv` | `run_rules_only.py` | 各表的规则对比列 |
+| `result/rules_c*/eval_results.csv` | `run_e10_rules_capacity.py` | 规则容量扫描（R1.5，U 形句） |
+| `result/e9_c*_plus_run*/eval_results.csv` | `run_e9_capacity_state.py` | 容量 × 状态通道（R1.5/R2.4 收尾） |
 | `result/stats_summary.csv` | `run_stats_and_plots.py` | 显著性检验 |
 | `result/figures/*.pdf` | `run_stats_and_plots.py` | 论文用图草稿 |
+| `paper_assets/generated/tab_*.tex` | `paper_assets/make_tables.py` | 论文表 15–21 及两张新片段的 tabular 主体 |
+| `paper_assets/generated/{Aisles,Rack Capacity}.pdf` | `paper_assets/plot_warehouse_scale_figures.py` | 论文图 13/14（修正标注版） |
 
-运行目录不进 git（见 `.gitignore`），要留档的 CSV 自行复制到论文仓库。
+运行目录的 CSV/JSON/YAML **随仓库提交留档**（它们是论文数字的证据链）；
+checkpoint（`*.pt`）体积大、不进 git（见 `.gitignore`），因此换机器复评需要重训。
 
 ---
 
@@ -332,7 +391,11 @@ SAPPO 做**配对**检验（配对 t 检验、Wilcoxon 符号秩检验、Cohen's
 2. **规则基线的数字与 Table 5 对不上。** 本仿真器下 MQ-ND 在 C18 得 `F = 1892.17`，
    论文报 1922.517（差 −1.6%）。原始的规则脚本不在仓库里，平局打破的细节无从对齐。
    用本实现重跑 Table 5 可以让所有方法跑在同一个仿真器上。
-3. **论文的 `D` 列不是计算时间。** 报告值等于 makespan / 决策点数——本仿真器下
-   C18/MQ-ND 得 6.808，论文报 6.827（差 −0.3%），而真实计算时间约 0.03 ms。见 §8。
+3. **论文 `D̄` 列与本仓库 `decision_time_ms` 口径不同。** 第二轮修订稿的 `D̄`
+   已换成作者初版管线的毫秒级全流程测量（SAPPO ≈ 7 ms、规则 ≈ 3.7–4.4 ms）；
+   本仓库的 `decision_time_ms` 只计策略调用本身（SAPPO ≈ 2 ms、规则 ≈ 0.02 ms）。
+   两者都是真实计算时间，但覆盖范围不同——引用时注明口径，别互相"订正"。
+   （历史备注：初稿的 `D` 列曾是 makespan / 决策点数，即 §8 的
+   `sim_time_per_decision`，该错误已在第二轮修订中更正。）
 
 `docs/experiment-spec.md` 是这些实验遵循的契约，改动"测什么、写什么"之前先读它。

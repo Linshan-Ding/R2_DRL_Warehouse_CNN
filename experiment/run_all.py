@@ -30,6 +30,8 @@ EXPERIMENTS = [
     # "e6",          # 约 18-24 h  tau_pick 敏感性
     # "e7",          # 约 18-24 h  载运容量 C=2/3
     # "e8",          # 约 9-12 h   中部横通道布局
+    # "e9",          # 约 15-24 h  容量 x 状态通道（第二轮返修新增，GPU 建议）
+    "e10",           # 约 10 分钟  规则容量扫描 C=1..5（第二轮返修新增）
     "rules",         # 约 2 分钟   五条规则基线
     "e3",            # 几秒        训练成本汇总
     "stats",         # 几秒        统计聚合与出图
@@ -50,12 +52,14 @@ _STEPS = {
     "e6": ("E6 拣选时间敏感性", "run_e6_picktime"),
     "e7": ("E7 载运容量", "run_e7_capacity"),
     "e8": ("E8 布局变体", "run_e8_layout"),
+    "e9": ("E9 容量x状态通道", "run_e9_capacity_state"),
+    "e10": ("E10 规则容量扫描", "run_e10_rules_capacity"),
     "rules": ("规则基线", "run_rules_only"),
     "stats": ("统计聚合与出图", "run_stats_and_plots"),
 }
 
 # 接受 EPISODES 参数的实验（训练类）
-_TRAINING_STEPS = {"smoke", "e0", "e1", "e2", "e4", "e5", "e6", "e7", "e8"}
+_TRAINING_STEPS = {"smoke", "e0", "e1", "e2", "e4", "e5", "e6", "e7", "e8", "e9"}
 
 
 def main(experiments=EXPERIMENTS, episodes=EPISODES):

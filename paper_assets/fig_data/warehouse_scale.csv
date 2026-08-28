@@ -1,0 +1,36 @@
+# Warehouse-scale sensitivity data (mean flow time in seconds, average decision
+# time in milliseconds), transcribed from Tables 13-14 of the revised manuscript
+# (second revision). The underlying runs come from the authors' original
+# pipeline; the four RL baselines are not yet archived in this repository
+# (README section 10, gap 1), so these values cannot be regenerated here yet.
+sweep,x,method,mean_flow_time,avg_decision_time_ms
+aisles,6,SAPPO,1057.970,4.247
+aisles,6,AG-DQN,1348.480,1.505
+aisles,6,HSDDQN,1275.247,1.586
+aisles,6,SOA+A2C,1110.913,4.453
+aisles,6,DRLG,1388.030,7.277
+aisles,9,SAPPO,1379.890,5.401
+aisles,9,AG-DQN,1756.363,2.984
+aisles,9,HSDDQN,1730.293,2.624
+aisles,9,SOA+A2C,1465.290,5.546
+aisles,9,DRLG,1792.644,8.922
+aisles,12,SAPPO,1894.527,7.171
+aisles,12,AG-DQN,2129.973,4.460
+aisles,12,HSDDQN,2148.083,4.664
+aisles,12,SOA+A2C,2002.424,6.733
+aisles,12,DRLG,2230.537,11.980
+rack,10,SAPPO,785.200,3.938
+rack,10,AG-DQN,1019.357,1.096
+rack,10,HSDDQN,1017.010,1.119
+rack,10,SOA+A2C,824.327,3.661
+rack,10,DRLG,1054.587,5.194
+rack,20,SAPPO,1379.890,5.401
+rack,20,AG-DQN,1756.363,2.984
+rack,20,HSDDQN,1730.293,2.624
+rack,20,SOA+A2C,1465.290,5.546
+rack,20,DRLG,1792.644,8.922
+rack,30,SAPPO,2375.883,8.287
+rack,30,AG-DQN,2649.487,7.089
+rack,30,HSDDQN,2670.160,5.322
+rack,30,SOA+A2C,2364.597,8.333
+rack,30,DRLG,2688.007,13.060
