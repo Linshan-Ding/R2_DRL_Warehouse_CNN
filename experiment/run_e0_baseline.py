@@ -15,8 +15,8 @@ import _bootstrap  # noqa: F401  必须最先导入
 from _runner import DEFAULT_METHODS, run_experiment
 
 # ==================== 配置区（改完右键 Run） ====================
-RUNS = 1                          # 独立重复次数；要看波动范围至少 3 次
-EPISODES = 20                   # None = 用 configs/algo.yaml 的 2000；先填 20 可快速验证
+RUNS = 3                          # 论文口径: 3 次独立训练（result/e0_run1..3 即由此产生）
+EPISODES = None                   # None = 用 configs/algo.yaml 的 2000；先填 20 可快速验证链路
 METHODS = list(DEFAULT_METHODS)   # SAPPO + 五条组合规则
 TIERS = ["main"]                  # 评测算例档位
 # ==============================================================
