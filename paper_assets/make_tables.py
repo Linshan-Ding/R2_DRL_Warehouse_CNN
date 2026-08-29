@@ -5,8 +5,9 @@
 manuscript.tex 中对应表格 diff 一致，就是"数字可追溯"的验收标准。
 
 统计口径（与论文 5.7 节协议声明一一对应）:
-* 运营配置（tab_ratio / tab_capacity / tab_picktime；tab_layout 的数字自
-  round-5 起以正文行内形式出现在 5.7.4，不再单列成表）
+* 运营配置（tab_ratio / tab_capacity / tab_capacity_rules_sweep /
+  tab_picktime；tab_layout 的数字自 round-5 起以正文行内形式出现在 5.7.4，
+  不再单列成表）
   —— SAPPO 取各配置独立训练中的最优（最小）平均流程时间；
      规则是确定性的，单次评测即可。全文口径 = 最优值，不报标准差。
 * 消融合并表（tab_ablation = 原 tab_gamma + tab_state 两块合一，
@@ -186,7 +187,7 @@ def tab_capacity_rules_sweep():
     write_fragment("tab_capacity_rules_sweep.tex",
                    [f"rules_c{c}" for c in caps],
                    "Method & " + " & ".join(f"$C={c}$" for c in caps), rows,
-                   extra_comment="% 论文 5.7.2 'U 形曲线' 句的数据支撑（规则、lam40）。")
+                   extra_comment="% 论文 Table 19（5.7.2 规则容量扫描，lam40）。")
 
 
 def tab_picktime():
@@ -350,9 +351,9 @@ def main():
     tab_state_capacity()
     tab_training_cost()
     print("\n完成。论文中仍以表格出现的片段（tab_ratio / tab_capacity / "
-          "tab_picktime / tab_ablation / tab_training_cost）与 manuscript.tex "
-          "对应表格的 tabular 主体应逐字一致；tab_layout / tab_state_capacity / "
-          "tab_capacity_rules_sweep 的数字以行内形式出现在正文与新图中。")
+          "tab_capacity_rules_sweep / tab_picktime / tab_ablation / "
+          "tab_training_cost）与 manuscript.tex 对应表格的 tabular 主体应逐字"
+          "一致；tab_layout / tab_state_capacity 的数字以行内形式出现在正文。")
 
 
 if __name__ == "__main__":

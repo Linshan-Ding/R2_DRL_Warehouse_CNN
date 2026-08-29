@@ -28,8 +28,9 @@ docs/          实验规格契约（experiment-spec.md）与修订日志（revis
 > **状态（2026-08-29）：下表 1–5 步已全部执行完毕并回填论文。** E10（2026-08-28）
 > 提供了 §5.7.2 的 C=4/5 数据；E9（2026-08-29，作者运行）已定稿 §5.7.2/§5.8.2 的
 > 收尾段；图 13/14 已替换为修正标注版。**表达润色轮（round-5）**：算例表并入
-> §5.1（Table 6），Table 19/22 撤表改行内，Table 20+21 合并为 Table 20（合并消融
-> 表），新增数据图 Fig. 15/16（`plot_operational_figures.py`），全文分号清零。
+> §5.1（Table 6），布局表与容量-状态表撤表改行内，γ 与观测两张消融表合并为
+> Table 21，规则容量扫描升格为 Table 19，浮动体位置参数（`[!htbp]` 等）全部移除，
+> 全文分号清零。
 > 论文剩余 `% TODO (AUTHORS)` 仅为人工项（Fig. 2 重绘、Manuscript ID）。
 > 下表保留作为复跑指南：
 
@@ -38,13 +39,12 @@ docs/          实验规格契约（experiment-spec.md）与修订日志（revis
 | 1 | `experiment/run_00_selfcheck.py` | 约 1 分钟 | 三道闸门 PASS | —（前置检查，必须全过） |
 | 2 | `experiment/run_e10_rules_capacity.py` | 约 10 分钟（CPU 即可） | `result/rules_c1..c5/` | §5.7.2 "U 形曲线"句的 C=4/5 数据点 |
 | 3 | `experiment/run_e9_capacity_state.py` | GPU 约 6 次训练 × 2.5–4 h | `result/e9_c2_plus_run*/`、`e9_c3_plus_run*/` | §5.7.2 与 §5.8.2 的收尾句、回复信 R1-C5 / R2-C4 两处 "待 E9" 段落 |
-| 4 | `paper_assets/make_tables.py` | 秒级 | `paper_assets/generated/*.tex` | 论文表 17–20 的逐字核对（Table 20 为合并消融表 `tab_ablation.tex`），外加 `tab_layout.tex`、`tab_capacity_rules_sweep.tex`、`tab_state_capacity.tex` 三张行内数字溯源片段 |
+| 4 | `paper_assets/make_tables.py` | 秒级 | `paper_assets/generated/*.tex` | 论文表 16–21 的逐字核对（Table 19 = `tab_capacity_rules_sweep.tex`，Table 21 = 合并消融表 `tab_ablation.tex`），外加 `tab_layout.tex`、`tab_state_capacity.tex` 两张行内数字溯源片段 |
 | 5 | `paper_assets/plot_warehouse_scale_figures.py` | 秒级 | `generated/Aisles.pdf`、`generated/Rack Capacity.pdf` | 覆盖论文 `Figure/` 同名文件（修正原图的副标题 / 刻度标注错误），并删除 manuscript.tex 中对应 TODO 注释 |
-| 6 | `paper_assets/plot_operational_figures.py` | 秒级 | `generated/ratio-sensitivity.pdf`、`generated/capacity-sensitivity.pdf` | 论文 Fig. 15（§5.7.1 配比研究）与 Fig. 16（§5.7.2 容量扫描），覆盖论文 `Figure/` 同名文件 |
 
 **验收标准**：`make_tables.py` 生成片段与 manuscript.tex 对应表格的 tabular 主体
-逐字一致（round-5 后论文中成表的 5 张片段 5/5 验证通过，行内化数字与图内数值
-与对应片段同源）。统计口径固定在
+逐字一致（round-5 后论文中成表的 6 张片段 6/6 验证通过，行内化数字与对应片段
+同源）。统计口径固定在
 `docs/experiment-spec.md`：运营配置表取 SAPPO 各配置独立训练的**最优值**、
 消融表报 **mean ± std（3 次独立训练）**、规则确定性单次评测。
 
@@ -168,7 +168,7 @@ TIERS    = ["main"]
 | `run_rules_only.py` | 五条规则基线（不训练） | 各表对比列 |
 | `run_stats_and_plots.py` | 统计聚合与出图 | — |
 | `run_all.py` | 按开关列表批跑 E0→E10 | — |
-| `paper_assets/make_tables.py` | 从 result/ 生成论文表格 LaTeX 片段 | 表 16–21 及两张新片段 |
+| `paper_assets/make_tables.py` | 从 result/ 生成论文表格 LaTeX 片段 | 表 16–21 及两张行内数字溯源片段 |
 | `paper_assets/plot_warehouse_scale_figures.py` | 重生成图 13/14（修正标注） | 图 13/14 |
 
 **批量跑：** `run_all.py` 顶部是一个开关列表，把不想跑的注释掉再 Run。每项都注了预计耗时，
@@ -383,7 +383,7 @@ SAPPO 做**配对**检验（配对 t 检验、Wilcoxon 符号秩检验、Cohen's
 | `result/e9_c*_plus_run*/eval_results.csv` | `run_e9_capacity_state.py` | 容量 × 状态通道（R1.5/R2.4 收尾） |
 | `result/stats_summary.csv` | `run_stats_and_plots.py` | 显著性检验 |
 | `result/figures/*.pdf` | `run_stats_and_plots.py` | 论文用图草稿 |
-| `paper_assets/generated/tab_*.tex` | `paper_assets/make_tables.py` | 论文表 15–21 及两张新片段的 tabular 主体 |
+| `paper_assets/generated/tab_*.tex` | `paper_assets/make_tables.py` | 论文表 16–21 及两张行内数字溯源片段的 tabular 主体 |
 | `paper_assets/generated/{Aisles,Rack Capacity}.pdf` | `paper_assets/plot_warehouse_scale_figures.py` | 论文图 13/14（修正标注版） |
 
 运行目录的 CSV/JSON/YAML **随仓库提交留档**（它们是论文数字的证据链）；
