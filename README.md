@@ -27,8 +27,10 @@ docs/          实验规格契约（experiment-spec.md）与修订日志（revis
 
 > **状态（2026-08-29）：下表 1–5 步已全部执行完毕并回填论文。** E10（2026-08-28）
 > 提供了 §5.7.2 的 C=4/5 数据；E9（2026-08-29，作者运行）已定稿 §5.7.2/§5.8.2 的
-> 收尾段并新增论文 Table 22（附录算例表顺延为 Table 23）；图 13/14 已替换为修正
-> 标注版。论文剩余 `% TODO (AUTHORS)` 仅为人工项（Fig. 2 重绘、Manuscript ID）。
+> 收尾段；图 13/14 已替换为修正标注版。**表达润色轮（round-5）**：算例表并入
+> §5.1（Table 6），Table 19/22 撤表改行内，Table 20+21 合并为 Table 20（合并消融
+> 表），新增数据图 Fig. 15/16（`plot_operational_figures.py`），全文分号清零。
+> 论文剩余 `% TODO (AUTHORS)` 仅为人工项（Fig. 2 重绘、Manuscript ID）。
 > 下表保留作为复跑指南：
 
 | 顺序 | 运行 | 耗时 | 产出 | 回填到论文 / 回复信 |
@@ -36,11 +38,13 @@ docs/          实验规格契约（experiment-spec.md）与修订日志（revis
 | 1 | `experiment/run_00_selfcheck.py` | 约 1 分钟 | 三道闸门 PASS | —（前置检查，必须全过） |
 | 2 | `experiment/run_e10_rules_capacity.py` | 约 10 分钟（CPU 即可） | `result/rules_c1..c5/` | §5.7.2 "U 形曲线"句的 C=4/5 数据点 |
 | 3 | `experiment/run_e9_capacity_state.py` | GPU 约 6 次训练 × 2.5–4 h | `result/e9_c2_plus_run*/`、`e9_c3_plus_run*/` | §5.7.2 与 §5.8.2 的收尾句、回复信 R1-C5 / R2-C4 两处 "待 E9" 段落 |
-| 4 | `paper_assets/make_tables.py` | 秒级 | `paper_assets/generated/*.tex` | 表 16–21 的逐字核对，外加 `tab_capacity_rules_sweep.tex`、`tab_state_capacity.tex` 两张新片段 |
+| 4 | `paper_assets/make_tables.py` | 秒级 | `paper_assets/generated/*.tex` | 论文表 17–20 的逐字核对（Table 20 为合并消融表 `tab_ablation.tex`），外加 `tab_layout.tex`、`tab_capacity_rules_sweep.tex`、`tab_state_capacity.tex` 三张行内数字溯源片段 |
 | 5 | `paper_assets/plot_warehouse_scale_figures.py` | 秒级 | `generated/Aisles.pdf`、`generated/Rack Capacity.pdf` | 覆盖论文 `Figure/` 同名文件（修正原图的副标题 / 刻度标注错误），并删除 manuscript.tex 中对应 TODO 注释 |
+| 6 | `paper_assets/plot_operational_figures.py` | 秒级 | `generated/ratio-sensitivity.pdf`、`generated/capacity-sensitivity.pdf` | 论文 Fig. 15（§5.7.1 配比研究）与 Fig. 16（§5.7.2 容量扫描），覆盖论文 `Figure/` 同名文件 |
 
 **验收标准**：`make_tables.py` 生成片段与 manuscript.tex 对应表格的 tabular 主体
-逐字一致（现有数据下 7/7 张表已验证通过）。统计口径固定在
+逐字一致（round-5 后论文中成表的 5 张片段 5/5 验证通过，行内化数字与图内数值
+与对应片段同源）。统计口径固定在
 `docs/experiment-spec.md`：运营配置表取 SAPPO 各配置独立训练的**最优值**、
 消融表报 **mean ± std（3 次独立训练）**、规则确定性单次评测。
 
