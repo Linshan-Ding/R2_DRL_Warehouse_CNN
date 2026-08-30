@@ -158,10 +158,11 @@ def tab_capacity():
 
     round-7 起把原 tab_capacity（SAPPO + 规则，C=1..3）与
     tab_capacity_rules_sweep（规则，C=1..5）合并为一张：两者在 C=1,2,3 上的
-    规则值本来就逐字节相同（规则确定性），分成两表纯属重复。SAPPO 只在
-    C<=3 逐容量重训，C=4,5 填 "--"。
+    规则值本来就逐字节相同（规则确定性），分成两表纯属重复。
+    SAPPO 行按 result/ 里实际存在的 e7_c* 目录填充，缺的容量写 "--"，
+    因此补跑 run_e7_capacity.py 的 C=4/5 之后重跑本脚本即可自动补全。
     """
-    sappo_src = {1: "e0", 2: "e7_c2", 3: "e7_c3"}
+    sappo_src = {1: "e0", 2: "e7_c2", 3: "e7_c3", 4: "e7_c4", 5: "e7_c5"}
     caps = [c for c in (1, 2, 3, 4, 5) if read_eval(f"rules_c{c}") is not None]
     if len(caps) < 4:
         skip("tab_capacity",
@@ -171,10 +172,11 @@ def tab_capacity():
     sappo = {}
     for c, prefix in sappo_src.items():
         v = sappo_best(prefix, "lam40")
-        if v is None:
-            skip("tab_capacity", f"result/{prefix}_run*")
-            return
-        sappo[c] = v
+        if v is not None:          # 缺的容量写 "--"，跑完 e7_c4/c5 后自动补全
+            sappo[c] = v
+    if not sappo:
+        skip("tab_capacity", "result/e0_run*（SAPPO 基线）")
+        return
     rows = ["SAPPO & " + " & ".join(f1(sappo[c]) if c in sappo else "--"
                                     for c in caps)]
     for m in RULES:
@@ -347,9 +349,9 @@ def main():
     tab_state_capacity()
     tab_training_cost()
     print("\n完成。论文中仍以表格出现的片段（tab_ratio / tab_capacity / "
-          "tab_capacity_rules_sweep / tab_picktime / tab_ablation / "
-          "tab_training_cost）与 manuscript.tex 对应表格的 tabular 主体应逐字"
-          "一致；tab_layout / tab_state_capacity 的数字以行内形式出现在正文。")
+          "tab_picktime / tab_ablation / tab_training_cost）与 manuscript.tex "
+          "对应表格的 tabular 主体应逐字一致；tab_layout / tab_state_capacity "
+          "的数字以行内形式出现在正文。")
 
 
 if __name__ == "__main__":

@@ -14,7 +14,7 @@ checkpoint、测试流单次评测），逐 run 产出 `result/<name>_run<i>/eva
 | E4 | `run_e4_gamma.py` | γ ∈ {0.95,0.99,1.00} | 各 3 | 2000 | SAPPO | Table 20 上块（§5.8.1，mean±std） |
 | E5 | `run_e5_state_channels.py` | state_channels=plus_agent | 3 | 2000 | SAPPO | Table 20 下块（§5.8.2，mean±std+配对 t） |
 | E6 | `run_e6_picktime.py` | τ_pick ∈ {15,20} s | 各 1 | 2000 | SAPPO+5 规则 | Table 19（§5.7.3） |
-| E7 | `run_e7_capacity.py` | C ∈ {2,3} | 各 1 | 2000 | SAPPO+5 规则 | Table 18（§5.7.2） |
+| E7 | `run_e7_capacity.py` | C ∈ {2,3}（round-7 起脚本含 4,5） | 各 1 | 2000 | SAPPO+5 规则 | Table 18（§5.7.2）；C=4/5 待跑，跑完自动补全 SAPPO 行 |
 | E8 | `run_e8_layout.py` | layout=three_cross_aisles | 1 | 2000 | SAPPO+5 规则 | §5.7.4 行内数字（`tab_layout.tex` 溯源） |
 | **E9** | `run_e9_capacity_state.py` | C∈{2,3} × plus_agent | 各 3 | **3000** | SAPPO+5 规则 | §5.7.2/§5.8.2 收尾句 + `tab_state_capacity.tex` |
 | **E10** | `run_e10_rules_capacity.py` | C ∈ {1..5}，仅规则 | 1 | 免训练 | 5 规则 | Table 18 的 C=4,5 列（§5.7.2 合并容量表） |

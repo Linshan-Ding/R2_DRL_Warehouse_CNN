@@ -43,6 +43,13 @@ docs/          实验规格契约（experiment-spec.md）与修订日志（revis
 | 4 | `paper_assets/make_tables.py` | 秒级 | `paper_assets/generated/*.tex` | 论文表 16–20 的逐字核对（Table 18 = C=1..5 合并容量表，Table 20 = 合并消融表 `tab_ablation.tex`），外加 `tab_layout.tex`、`tab_state_capacity.tex` 两张行内数字溯源片段 |
 | 5 | `paper_assets/plot_warehouse_scale_figures.py` | 秒级 | `generated/Aisles.pdf`、`generated/Rack Capacity.pdf` | 覆盖论文 `Figure/` 同名文件（修正原图的副标题 / 刻度标注错误），并删除 manuscript.tex 中对应 TODO 注释 |
 
+**待运行（round-7 新增，可选但建议）**：`experiment/run_e7_capacity.py` 的 C=4/5 两个配置
+——论文 Table 18 里五条规则已铺满 C=1..5，SAPPO 行的 C=4/5 仍是 `--`，而载运容量正是
+Reviewer #1 点名的维度。脚本已就绪（`configs/exp/e7_capacity_4.yaml`、`e7_capacity_5.yaml`，
+沿用与 C=2/3 相同的 RUNS=1、2000 轮预算），只跑这两个配置约 7 GPU 小时，产出
+`result/e7_c4_run1/`、`result/e7_c5_run1/`。跑完重跑 `make_tables.py` 即自动补全该行，
+无需改代码。
+
 **验收标准**：`make_tables.py` 生成片段与 manuscript.tex 对应表格的 tabular 主体
 逐字一致（round-7 后论文中成表的 5 张片段 5/5 验证通过，行内化数字与对应片段
 同源）。统计口径固定在
