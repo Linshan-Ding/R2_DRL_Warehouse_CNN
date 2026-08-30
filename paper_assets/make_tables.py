@@ -5,11 +5,14 @@
 manuscript.tex 中对应表格 diff 一致，就是"数字可追溯"的验收标准。
 
 统计口径（与论文 5.7 节协议声明一一对应）:
-* 运营配置表（tab_ratio / tab_capacity / tab_picktime / tab_layout）
+* 运营配置（tab_ratio / tab_capacity / tab_picktime；tab_capacity 自 round-7
+  起为 C=1..5 的合并表；tab_layout 的数字自 round-5 起以正文行内形式出现在
+  5.7.4，不再单列成表）
   —— SAPPO 取各配置独立训练中的最优（最小）平均流程时间；
      规则是确定性的，单次评测即可。全文口径 = 最优值，不报标准差。
-* 消融表（tab_gamma / tab_state）
-  —— 报 3 次独立训练的 mean ± std（ddof=1）：这两张表的论证本身依赖
+* 消融合并表（tab_ablation = 原 tab_gamma + tab_state 两块合一，
+  round-5 起论文只保留这一张消融表）
+  —— 报 3 次独立训练的 mean ± std（ddof=1）：论证本身依赖
      run-to-run 方差与配对检验，删掉标准差论证就塌了。
 * 训练成本表（tab_training_cost）—— 各配置 wall clock / 吞吐取均值。
 
@@ -151,40 +154,39 @@ def tab_ratio():
 
 
 def tab_capacity():
-    cols = [("$C=1$", "e0"), ("$C=2$", "e7_c2"), ("$C=3$", "e7_c3")]
-    per_col = {}
-    for label, prefix in cols:
-        sappo = sappo_best(prefix, "lam40")
-        rules = rules_at(prefix, "lam40")
-        if sappo is None or not rules:
-            skip("tab_capacity", f"result/{prefix}_run*")
-            return
-        per_col[label] = dict(rules, SAPPO=sappo)
-    rows = [m + " & " + " & ".join(f1(per_col[label][m]) for label, _ in cols)
-            for m in ("SAPPO",) + RULES]
-    write_fragment("tab_capacity.tex",
-                   sorted(set(sum((runs_of(p) for _, p in cols), []))),
-                   "Method & " + " & ".join(label for label, _ in cols), rows)
+    """5.7.2 容量表（论文 Table 18）。
 
-
-def tab_capacity_rules_sweep():
-    caps = [c for c in (1, 2, 3, 4, 5)
-            if read_eval(f"rules_c{c}") is not None]
+    round-7 起把原 tab_capacity（SAPPO + 规则，C=1..3）与
+    tab_capacity_rules_sweep（规则，C=1..5）合并为一张：两者在 C=1,2,3 上的
+    规则值本来就逐字节相同（规则确定性），分成两表纯属重复。
+    SAPPO 行按 result/ 里实际存在的 e7_c* 目录填充，缺的容量写 "--"，
+    因此补跑 run_e7_capacity.py 的 C=4/5 之后重跑本脚本即可自动补全。
+    """
+    sappo_src = {1: "e0", 2: "e7_c2", 3: "e7_c3", 4: "e7_c4", 5: "e7_c5"}
+    caps = [c for c in (1, 2, 3, 4, 5) if read_eval(f"rules_c{c}") is not None]
     if len(caps) < 4:
-        skip("tab_capacity_rules_sweep",
+        skip("tab_capacity",
              "result/rules_c1..c5（experiment/run_e10_rules_capacity.py）")
         return
     per_c = {c: rules_at(f"rules_c{c}", "lam40") for c in caps}
-    rows = []
+    sappo = {}
+    for c, prefix in sappo_src.items():
+        v = sappo_best(prefix, "lam40")
+        if v is not None:          # 缺的容量写 "--"，跑完 e7_c4/c5 后自动补全
+            sappo[c] = v
+    if not sappo:
+        skip("tab_capacity", "result/e0_run*（SAPPO 基线）")
+        return
+    rows = ["SAPPO & " + " & ".join(f1(sappo[c]) if c in sappo else "--"
+                                    for c in caps)]
     for m in RULES:
         rows.append(m + " & " + " & ".join(f1(per_c[c][m]) for c in caps))
-    best_row = ("\\midrule\nBest rule & "
+    rows.append("\\midrule\nBest rule & "
                 + " & ".join(f1(min(per_c[c].values())) for c in caps))
-    rows.append(best_row)
-    write_fragment("tab_capacity_rules_sweep.tex",
-                   [f"rules_c{c}" for c in caps],
-                   "Method & " + " & ".join(f"$C={c}$" for c in caps), rows,
-                   extra_comment="% 论文 5.7.2 'U 形曲线' 句的数据支撑（规则、lam40）。")
+    sources = sorted(set(sum((runs_of(p) for p in sappo_src.values()), [])
+                         + [f"rules_c{c}" for c in caps]))
+    write_fragment("tab_capacity.tex", sources,
+                   "Method & " + " & ".join(f"$C={c}$" for c in caps), rows)
 
 
 def tab_picktime():
@@ -207,6 +209,9 @@ def tab_picktime():
 
 
 def tab_layout():
+    """E8 布局变体。round-5 起论文 5.7.4 不再单列此表，两组数字
+    （1557.1→1079.2 / 1816.3→1089.7，MI-MI）以行内形式写进正文；
+    本片段保留作为行内数字的数据溯源。"""
     base_sappo = sappo_best("e0", "lam40")
     base_rules = rules_at("e0", "lam40")
     mid_sappo = sappo_best("e8_mid", "lam40")
@@ -225,44 +230,46 @@ def tab_layout():
                    "Layout & SAPPO $\\bar{F}$ & Best rule & Rule $\\bar{F}$", rows)
 
 
-def tab_gamma():
-    gammas = ["0.95", "0.99", "1.00"]
+def tab_ablation():
+    """5.8 合并消融表（tab:ablation）：上块折扣因子 γ、下块观测 s_t vs s_t^+。
+
+    round-5 起论文把原 tab_gamma / tab_state 两张小表合并成这一张，
+    行标签与论文逐字一致（$\\gamma = 0.95$ … / $s_t$ (4 channels) …）。
+    """
     rows, sources = [], []
-    for g in gammas:
+    rows.append("\\multicolumn{5}{l}{\\emph{Discount factor}}")
+    for g in ("0.95", "0.99", "1.00"):
         prefix = f"e4_gamma{g}"
         cells, means = [], []
         for stream in STREAMS:
             vals = sappo_runs(prefix, stream)
             if not vals:
-                skip("tab_gamma", f"result/{prefix}_run*")
+                skip("tab_ablation", f"result/{prefix}_run*")
                 return
             cells.append(mean_std(vals))
             means.append(sum(vals) / len(vals))
-        rows.append(f"{g} & " + " & ".join(cells)
+        rows.append(f"$\\gamma = {g}$ & " + " & ".join(cells)
                     + f" & {f1(sum(means) / len(means))}")
         sources += runs_of(prefix)
-    write_fragment("tab_gamma.tex", sorted(set(sources)),
-                   "$\\gamma$ & $1/\\lambda=20$ & $1/\\lambda=40$ & "
-                   "$1/\\lambda=60$ & Overall", rows)
-
-
-def tab_state():
-    variants = [("Base (4 channels)", "e0"), ("+ agent channels (6)", "e5_plus")]
-    rows, sources, paired = [], [], {}
+    variants = [("$s_t$ (4 channels)", "e0"),
+                ("$s_t^{+}$ (6 channels)", "e5_plus")]
+    paired = {}
+    obs_rows = []
     for label, prefix in variants:
         cells, means = [], []
         for stream in STREAMS:
             vals = sappo_runs(prefix, stream)
             if len(vals) < 2:
-                skip("tab_state", f"result/{prefix}_run*（>= 2 次独立训练）")
+                skip("tab_ablation", f"result/{prefix}_run*（>= 2 次独立训练）")
                 return
             cells.append(mean_std(vals))
             means.append(sum(vals) / len(vals))
             paired[(prefix, stream)] = vals
-        rows.append(f"{label} & " + " & ".join(cells)
-                    + f" & {f1(sum(means) / len(means))}")
+        obs_rows.append(f"{label} & " + " & ".join(cells)
+                        + f" & {f1(sum(means) / len(means))}")
         sources += runs_of(prefix)
-    comment = ""
+    rows.append("\\midrule\n\\multicolumn{5}{l}{\\emph{Observation}}")
+    rows += obs_rows
     try:
         from scipy import stats as sps
         base, plus = [], []
@@ -270,17 +277,19 @@ def tab_state():
             base += paired[("e0", stream)]
             plus += paired[("e5_plus", stream)]
         t, p = sps.ttest_rel(base, plus)
-        comment = (f"% paired t-test over {len(base)} (stream, run) pairs: "
-                   f"t = {t:.3f}, p = {p:.4f}")
+        comment = (f"% paired t-test (observation ablation) over {len(base)} "
+                   f"(stream, run) pairs: t = {t:.3f}, p = {p:.4f}")
     except ImportError:
         comment = "% scipy 未安装，配对 t 检验略；pip install scipy 后重跑"
-    write_fragment("tab_state.tex", sorted(set(sources)),
-                   "State & $1/\\lambda=20$ & $1/\\lambda=40$ & "
+    write_fragment("tab_ablation.tex", sorted(set(sources)),
+                   "Setting & $1/\\lambda=20$ & $1/\\lambda=40$ & "
                    "$1/\\lambda=60$ & Overall", rows, extra_comment=comment)
 
 
 def tab_state_capacity():
-    """E9: 容量 x 状态通道。e9 数据齐了才生成，用于定稿 5.7.2 / 5.8.2 的收尾句。"""
+    """E9: 容量 x 状态通道。round-5 起论文 5.8.2 不再单列此表，四个数字
+    （1879.5→1743.4±52.5 / 1912.0→1839.4±49.0）以行内形式写进正文；
+    本片段保留作为行内数字的数据溯源。"""
     combos = [("$C=2$", "e7_c2", "e9_c2_plus"), ("$C=3$", "e7_c3", "e9_c3_plus")]
     if not any(runs_of(p) for _, _, p in combos):
         skip("tab_state_capacity",
@@ -322,11 +331,11 @@ def tab_training_cost():
         wall_h = sum(float(x["wall_clock_s"]) for x in recs) / len(recs) / 3600
         dps = sum(float(x["decisions_per_second"]) for x in recs) / len(recs)
         rows.append(f"{k} & {r} & {n_actions} & {params:.1f} & {episodes} & "
-                    f"{len(recs)} & {wall_h:.1f} & {dps:.0f}")
+                    f"{wall_h:.1f} & {dps:.0f}")
         sources += runs_of(prefix)
     write_fragment("tab_training_cost.tex", sorted(set(sources)),
                    "$K$ & $R$ & $|\\mathcal{A}|$ & Params ($\\times 10^6$) & "
-                   "Episodes & Runs & Wall clock (h) & Decisions/s", rows)
+                   "Episodes & Wall clock (h) & Decisions/s", rows)
 
 
 def main():
@@ -334,15 +343,15 @@ def main():
     print(f"输出目录:   {OUT}\n")
     tab_ratio()
     tab_capacity()
-    tab_capacity_rules_sweep()
     tab_picktime()
     tab_layout()
-    tab_gamma()
-    tab_state()
+    tab_ablation()
     tab_state_capacity()
     tab_training_cost()
-    print("\n完成。生成片段与 manuscript.tex 对应表格的 tabular 主体应逐字一致"
-          "（layout 表首行的 'Eq. 2' 在论文里写作 \\eqref 引用，属预期差异）。")
+    print("\n完成。论文中仍以表格出现的片段（tab_ratio / tab_capacity / "
+          "tab_picktime / tab_ablation / tab_training_cost）与 manuscript.tex "
+          "对应表格的 tabular 主体应逐字一致；tab_layout / tab_state_capacity "
+          "的数字以行内形式出现在正文。")
 
 
 if __name__ == "__main__":

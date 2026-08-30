@@ -1,0 +1,13 @@
+# E7 -- AMR carrying capacity (Reviewer #1), extension to C = 4.
+#
+# C = 4: an AMR takes up to 4 orders per service cycle, visits the union of
+# their required picking points and is packed once per order on return.
+# Added so that the SAPPO row of the paper's capacity table spans the same
+# range C = 1..5 as the deterministic dispatching rules of E10.
+#
+# Budget: keep the config default (2000 episodes), identical to C = 2 and 3.
+# The capacity table compares capacities, so the training budget has to stay
+# fixed across the row; a larger C converges more slowly (see the note of the
+# state-channel study), and that caveat is reported rather than compensated.
+env:
+  robot_capacity: 4
