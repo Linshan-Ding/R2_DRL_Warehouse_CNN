@@ -13,7 +13,7 @@
 | R1.2 | 1:1 / 1:n / n:1 配比 | E0+E1+E2 → `tab_ratio.tex` | Rev.1 Comment 2 | §5.7.1（Table 17） | **已改稿** |
 | R1.3 | 货架间移动 | E8 → `tab_layout.tex` | Rev.1 Comment 3 | Eq.(2) 后两情形说明 + §5.7.4（数字行内，round-5 撤表）；Fig. 2 标注路径 | **已改稿**；Fig. 2 待作者 |
 | R1.4 | 货架层高 | E6 → `tab_picktime.tex` | Rev.1 Comment 4 | 新假设 (A8) + §5.7.3（Table 19）+ 结论 limitations | **已改稿** |
-| R1.5 | 载运容量 | E7 + E10 规则扫描 + E9 → `tab_capacity.tex` / `tab_capacity_rules_sweep.tex` / `tab_state_capacity.tex` | Rev.1 Comment 5 | (A1) 一般化 + 新 Eq.(8) 容量约束 + 记号表 + §5.7.2（Table 18，C=1..5 合并表）| **已定稿**（E9 结果已回填收尾段） |
+| R1.5 | 载运容量 | E7 + E10 规则扫描 + E9 → `tab_capacity.tex` / `tab_capacity_rules_sweep.tex` / `tab_state_capacity.tex` | Rev.1 Comment 5 | (A1) 一般化 + 新 Eq.(8) 容量约束 + 记号表 + §5.7.2（Table 18，全部方法覆盖 C=1..5）| **已定稿**（E9 结果已回填收尾段） |
 | R1.6 | 更大规模 | E2+E3 → `tab_training_cost.tex` | Rev.1 Comment 6 | §5.6.3（Table 16）+ §5.7.1 扩展规模行 | **已改稿** |
 | R2.1 | 重训 vs 迁移 + 成本 | E3 → `tab_training_cost.tex` | Rev.2 Comment 1 | §5.6 开头 from-scratch 声明；§5.6.2 迁移措辞收窄 | **已改稿** |
 | R2.2 | 调参预算 | 纯写作 | Rev.2 Comment 2 | §5.4 末句改写 + Table 9 脚注 + 结论 limitations | **已改稿** |
