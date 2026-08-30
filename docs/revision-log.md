@@ -12,19 +12,19 @@
 | R1.1 | 人机角色 + depot 场景 | 纯写作（E1/E7 数据支撑"最有效方式"） | Rev.1 Comment 1 | §3.1 角色表（Table 2）+ FIFO 说明；Fig. 2 重绘 | **已改稿**；Fig. 2 待作者 |
 | R1.2 | 1:1 / 1:n / n:1 配比 | E0+E1+E2 → `tab_ratio.tex` | Rev.1 Comment 2 | §5.7.1（Table 17） | **已改稿** |
 | R1.3 | 货架间移动 | E8 → `tab_layout.tex` | Rev.1 Comment 3 | Eq.(2) 后两情形说明 + §5.7.4（数字行内，round-5 撤表）；Fig. 2 标注路径 | **已改稿**；Fig. 2 待作者 |
-| R1.4 | 货架层高 | E6 → `tab_picktime.tex` | Rev.1 Comment 4 | 新假设 (A8) + §5.7.3（Table 20）+ 结论 limitations | **已改稿** |
-| R1.5 | 载运容量 | E7 + E10 规则扫描 + E9 → `tab_capacity.tex` / `tab_capacity_rules_sweep.tex` / `tab_state_capacity.tex` | Rev.1 Comment 5 | (A1) 一般化 + 新 Eq.(8) 容量约束 + 记号表 + §5.7.2（Tables 18–19）| **已定稿**（E9 结果已回填收尾段） |
+| R1.4 | 货架层高 | E6 → `tab_picktime.tex` | Rev.1 Comment 4 | 新假设 (A8) + §5.7.3（Table 19）+ 结论 limitations | **已改稿** |
+| R1.5 | 载运容量 | E7 + E10 规则扫描 + E9 → `tab_capacity.tex` / `tab_capacity_rules_sweep.tex` / `tab_state_capacity.tex` | Rev.1 Comment 5 | (A1) 一般化 + 新 Eq.(8) 容量约束 + 记号表 + §5.7.2（Table 18，C=1..5 合并表）| **已定稿**（E9 结果已回填收尾段） |
 | R1.6 | 更大规模 | E2+E3 → `tab_training_cost.tex` | Rev.1 Comment 6 | §5.6.3（Table 16）+ §5.7.1 扩展规模行 | **已改稿** |
 | R2.1 | 重训 vs 迁移 + 成本 | E3 → `tab_training_cost.tex` | Rev.2 Comment 1 | §5.6 开头 from-scratch 声明；§5.6.2 迁移措辞收窄 | **已改稿** |
 | R2.2 | 调参预算 | 纯写作 | Rev.2 Comment 2 | §5.4 末句改写 + Table 9 脚注 + 结论 limitations | **已改稿** |
-| R2.3 | γ 与 telescoping | E4 → `tab_gamma.tex` | Rev.2 Comment 3 | §4.4 Abel 展开（Eq. 18）+ §5.8.1（Table 21 上块） | **已改稿** |
-| R2.4 | 状态充分性 | E5 + E9 → `tab_state.tex`（p = 0.317）/ `tab_state_capacity.tex` | Rev.2 Comment 4 | §4.2–4.3 观测形式化 + 信息表（Table 4）+ §5.8.2（Table 21 下块 + C∈{2,3} 行内数字，记号 s_t^+/o_t^+） | **已定稿**（E9 已回填：C∈{2,3} 下六通道一致改善 −7.2%/−3.8%，仍逊于 MQ-MinRQ；附预算警告） |
+| R2.3 | γ 与 telescoping | E4 → `tab_gamma.tex` | Rev.2 Comment 3 | §4.4 Abel 展开（Eq. 18）+ §5.8.1（Table 20 上块） | **已改稿** |
+| R2.4 | 状态充分性 | E5 + E9 → `tab_state.tex`（p = 0.317）/ `tab_state_capacity.tex` | Rev.2 Comment 4 | §4.2–4.3 观测形式化 + 信息表（Table 4）+ §5.8.2（Table 20 下块 + C∈{2,3} 行内数字，记号 s_t^+/o_t^+） | **已定稿**（E9 已回填：C∈{2,3} 下六通道一致改善 −7.2%/−3.8%，仍逊于 MQ-MinRQ；附预算警告） |
 | — | 决策时间口径（作者主动修正） | 作者初版管线测量（本仓库 `decision_time_ms` 口径不同，见 README §8/§10） | 封面 main changes 第 9 条 | 全部对比表 D̄ 列换新数据、表头加单位（F̄ 秒 / D̄ 毫秒）、§5.3 等叙述重写 | **已改稿** |
 
 ## 统计口径（第二轮确认）
 
-- 运营配置研究（§5.7.1–5.7.4，Tables 17–20，布局数字行内）：SAPPO 取各配置独立训练的**最优值**（与全文口径一致），不报标准差；规则确定性单次评测。
-- 合并消融表（Table 21，上块 γ / 下块观测）：保留 **mean ± std（3 次独立训练）**——论证依赖方差与配对检验。
+- 运营配置研究（§5.7.1–5.7.4，Tables 17–19，布局数字行内）：SAPPO 取各配置独立训练的**最优值**（与全文口径一致），不报标准差；规则确定性单次评测。
+- 合并消融表（Table 20，上块 γ / 下块观测）：保留 **mean ± std（3 次独立训练）**——论证依赖方差与配对检验；自 round-7 起论文与回复信不陈述具体重复次数，本仓库仍是真实记录。
 - 补充实验数字只在新流水线内部自洽比较，不与主表（Tables 8/10）逐数字对照。
 
 ## 待办
@@ -46,6 +46,6 @@ round-5 表达润色（2026-08-29）：算例表并入 §5.1 成 Table 6，布�
 
 - 回复信与论文补充实验表格的所有数字由 `paper_assets/make_tables.py` 从
   `result/` 的 CSV 生成；生成片段与 manuscript.tex 对应表格逐字 diff 一致
-  是验收标准（round-5 后论文成表片段 6/6 通过：ratio/capacity/
-  capacity_rules_sweep/picktime/ablation/training_cost；行内化数字与片段同源）。
+  是验收标准（round-7 后论文成表片段 5/5 通过：ratio/capacity/picktime/
+  ablation/training_cost；行内化数字与片段同源）。
 - 审稿意见在回复信中逐字照录（11/11）。

@@ -5,9 +5,9 @@
 manuscript.tex 中对应表格 diff 一致，就是"数字可追溯"的验收标准。
 
 统计口径（与论文 5.7 节协议声明一一对应）:
-* 运营配置（tab_ratio / tab_capacity / tab_capacity_rules_sweep /
-  tab_picktime；tab_layout 的数字自 round-5 起以正文行内形式出现在 5.7.4，
-  不再单列成表）
+* 运营配置（tab_ratio / tab_capacity / tab_picktime；tab_capacity 自 round-7
+  起为 C=1..5 的合并表；tab_layout 的数字自 round-5 起以正文行内形式出现在
+  5.7.4，不再单列成表）
   —— SAPPO 取各配置独立训练中的最优（最小）平均流程时间；
      规则是确定性的，单次评测即可。全文口径 = 最优值，不报标准差。
 * 消融合并表（tab_ablation = 原 tab_gamma + tab_state 两块合一，
@@ -154,40 +154,37 @@ def tab_ratio():
 
 
 def tab_capacity():
-    cols = [("$C=1$", "e0"), ("$C=2$", "e7_c2"), ("$C=3$", "e7_c3")]
-    per_col = {}
-    for label, prefix in cols:
-        sappo = sappo_best(prefix, "lam40")
-        rules = rules_at(prefix, "lam40")
-        if sappo is None or not rules:
-            skip("tab_capacity", f"result/{prefix}_run*")
-            return
-        per_col[label] = dict(rules, SAPPO=sappo)
-    rows = [m + " & " + " & ".join(f1(per_col[label][m]) for label, _ in cols)
-            for m in ("SAPPO",) + RULES]
-    write_fragment("tab_capacity.tex",
-                   sorted(set(sum((runs_of(p) for _, p in cols), []))),
-                   "Method & " + " & ".join(label for label, _ in cols), rows)
+    """5.7.2 容量表（论文 Table 18）。
 
-
-def tab_capacity_rules_sweep():
-    caps = [c for c in (1, 2, 3, 4, 5)
-            if read_eval(f"rules_c{c}") is not None]
+    round-7 起把原 tab_capacity（SAPPO + 规则，C=1..3）与
+    tab_capacity_rules_sweep（规则，C=1..5）合并为一张：两者在 C=1,2,3 上的
+    规则值本来就逐字节相同（规则确定性），分成两表纯属重复。SAPPO 只在
+    C<=3 逐容量重训，C=4,5 填 "--"。
+    """
+    sappo_src = {1: "e0", 2: "e7_c2", 3: "e7_c3"}
+    caps = [c for c in (1, 2, 3, 4, 5) if read_eval(f"rules_c{c}") is not None]
     if len(caps) < 4:
-        skip("tab_capacity_rules_sweep",
+        skip("tab_capacity",
              "result/rules_c1..c5（experiment/run_e10_rules_capacity.py）")
         return
     per_c = {c: rules_at(f"rules_c{c}", "lam40") for c in caps}
-    rows = []
+    sappo = {}
+    for c, prefix in sappo_src.items():
+        v = sappo_best(prefix, "lam40")
+        if v is None:
+            skip("tab_capacity", f"result/{prefix}_run*")
+            return
+        sappo[c] = v
+    rows = ["SAPPO & " + " & ".join(f1(sappo[c]) if c in sappo else "--"
+                                    for c in caps)]
     for m in RULES:
         rows.append(m + " & " + " & ".join(f1(per_c[c][m]) for c in caps))
-    best_row = ("\\midrule\nBest rule & "
+    rows.append("\\midrule\nBest rule & "
                 + " & ".join(f1(min(per_c[c].values())) for c in caps))
-    rows.append(best_row)
-    write_fragment("tab_capacity_rules_sweep.tex",
-                   [f"rules_c{c}" for c in caps],
-                   "Method & " + " & ".join(f"$C={c}$" for c in caps), rows,
-                   extra_comment="% 论文 Table 19（5.7.2 规则容量扫描，lam40）。")
+    sources = sorted(set(sum((runs_of(p) for p in sappo_src.values()), [])
+                         + [f"rules_c{c}" for c in caps]))
+    write_fragment("tab_capacity.tex", sources,
+                   "Method & " + " & ".join(f"$C={c}$" for c in caps), rows)
 
 
 def tab_picktime():
@@ -332,11 +329,11 @@ def tab_training_cost():
         wall_h = sum(float(x["wall_clock_s"]) for x in recs) / len(recs) / 3600
         dps = sum(float(x["decisions_per_second"]) for x in recs) / len(recs)
         rows.append(f"{k} & {r} & {n_actions} & {params:.1f} & {episodes} & "
-                    f"{len(recs)} & {wall_h:.1f} & {dps:.0f}")
+                    f"{wall_h:.1f} & {dps:.0f}")
         sources += runs_of(prefix)
     write_fragment("tab_training_cost.tex", sorted(set(sources)),
                    "$K$ & $R$ & $|\\mathcal{A}|$ & Params ($\\times 10^6$) & "
-                   "Episodes & Runs & Wall clock (h) & Decisions/s", rows)
+                   "Episodes & Wall clock (h) & Decisions/s", rows)
 
 
 def main():
@@ -344,7 +341,6 @@ def main():
     print(f"输出目录:   {OUT}\n")
     tab_ratio()
     tab_capacity()
-    tab_capacity_rules_sweep()
     tab_picktime()
     tab_layout()
     tab_ablation()
