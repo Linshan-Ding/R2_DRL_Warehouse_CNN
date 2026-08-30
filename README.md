@@ -45,10 +45,10 @@ docs/          实验规格契约（experiment-spec.md）与修订日志（revis
 
 **待运行（round-7 新增，可选但建议）**：`experiment/run_e7_capacity.py` 的 C=4/5 两个配置
 ——论文 Table 18 里五条规则已铺满 C=1..5，SAPPO 行的 C=4/5 仍是 `--`，而载运容量正是
-Reviewer #1 点名的维度。脚本已就绪（`configs/exp/e7_capacity_4.yaml`、`e7_capacity_5.yaml`，
-沿用与 C=2/3 相同的 RUNS=1、2000 轮预算），只跑这两个配置约 7 GPU 小时，产出
-`result/e7_c4_run1/`、`result/e7_c5_run1/`。跑完重跑 `make_tables.py` 即自动补全该行，
-无需改代码。
+Reviewer #1 点名的维度。约 7 GPU 小时，产出 `result/e7_c4_run1/`、`result/e7_c5_run1/`，
+跑完重跑 `make_tables.py` 即自动补全该行。
+**逐步操作见 §7 的"E7 补跑 C = 4 / 5"小节**（含前置自检、配置区改法、链路冒烟、
+产出核对与推送清单）。
 
 **验收标准**：`make_tables.py` 生成片段与 manuscript.tex 对应表格的 tabular 主体
 逐字一致（round-7 后论文中成表的 5 张片段 5/5 验证通过，行内化数字与对应片段
@@ -292,12 +292,77 @@ E0 复现不了的话，先查清原因，别急着跑后面的实验。
 ### E7 机器人单次载运能力（R1.5）
 
 **运行：** 右键运行 `experiment/run_e7_capacity.py`
-**产出：** `result/e7_c2_run*/`、`e7_c3_run*/` 下的 `eval_results.csv`
+**产出：** `result/e7_c2_run*/` … `e7_c5_run*/` 下的 `eval_results.csv`
 **随后：** 右键运行 `run_stats_and_plots.py`，`SENSITIVITY_COLUMN` 设为 `"robot_capacity"`
 
 `C` 变大会拉长单台机器人的路径，若不配套路径优化，F **未必单调改善**——
 参考数据：规则 MQ-ND、lam40、K=3/R=6 下 C=1 得 1892.17，C=2 得 1948.98。
 结论方向不要预设，跑出来是什么就报什么。
+
+#### E7 补跑 C = 4 / 5（round-7 新增，建议做）
+
+**为什么要跑。** 论文 Table 18 里五条确定性规则已经铺满 C = 1..5（来自 E10），
+SAPPO 行的 C = 4、5 仍是 `--`。载运容量正是 Reviewer #1 点名的维度，
+"被点名的方法在被点名的维度上留空"最容易引出下一轮"请补全"。
+
+**耗时。** 每个配置一次训练约 3.3 h（RTX 4060 Laptop，见论文训练成本表），
+两个配置合计 **约 7 GPU 小时**。纯 CPU 也能跑，但以天计，不建议。
+
+**口径（不要改）。** `RUNS = 1`、`EPISODES = None`（即 `configs/algo.yaml` 的 2000 轮），
+与 C = 2/3 完全一致。Table 18 比较的是**容量**，同一行内训练预算必须固定，
+否则数值差异会混入预算差异；"大容量收敛更慢"这一点在表注里如实说明，不靠加轮数掩盖。
+
+**步骤：**
+
+1. **前置自检。** 右键运行 `experiment/run_00_selfcheck.py`，三道闸门全部 PASS 才继续
+   （第 3 道正是载运容量闸门：`C = 1` 与原"一次一单"模型逐事件等价、`C = 2` 确实改变调度）。
+
+2. **只保留待跑的两个配置。** 打开 `experiment/run_e7_capacity.py`，把配置区改成：
+
+   ```python
+   CONFIGS = [
+       # ("e7_c2", "configs/exp/e7_capacity_2.yaml"),   # 已跑完，注释掉
+       # ("e7_c3", "configs/exp/e7_capacity_3.yaml"),   # 已跑完，注释掉
+       ("e7_c4", "configs/exp/e7_capacity_4.yaml"),
+       ("e7_c5", "configs/exp/e7_capacity_5.yaml"),
+   ]
+   RUNS = 1
+   EPISODES = None
+   ```
+
+3. **先花几分钟验链路（推荐）。** 把 `EPISODES` 临时改成 `20` 后右键 Run。
+   能跑完说明"配置 → 训练 → 评测 → 写盘"整条链没问题。确认后把 `EPISODES` 改回 `None`，
+   并删掉冒烟产生的 `result/e7_c4_run1/`、`result/e7_c5_run1/` 两个目录（正式运行会写同名目录）。
+
+4. **正式运行。** 右键运行 `experiment/run_e7_capacity.py`，约 7 小时。
+   每个配置结束时终端会打印 `[e7_c4] 完成，共 1 个运行目录` 及产出文件清单。
+
+5. **验产出。** 应出现 `result/e7_c4_run1/` 与 `result/e7_c5_run1/`，
+   各含 `eval_results.csv`、`log.csv`、`training_cost.csv`、`config_snapshot.yaml`、`run_info.json`。
+   打开 `eval_results.csv` 快速核对容量确实生效：
+
+   - `robot_capacity` 列在 c4 目录里应全为 `4`、c5 目录里全为 `5`；
+   - `instance_id` 含 `lam20 / lam40 / lam60`，`method` 含 `SAPPO` 与五条规则；
+   - 进 Table 18 的只有 `lam40` 行的 `SAPPO` 值。
+
+6. **回填表格。** 右键运行 `paper_assets/make_tables.py`。
+   `generated/tab_capacity.tex` 的 SAPPO 行会自动从 `--` 变成实际数值——
+   生成器按 `result/` 里实际存在的 `e7_c*` 目录填格，**不需要改代码**。
+
+7. **推送。** 把 `result/e7_c4_run1/`、`result/e7_c5_run1/` 与重新生成的
+   `paper_assets/generated/tab_capacity.tex` 一并提交到 `claude/paper-revision-rebuttal-b6slds`
+   分支并推送，然后告知论文侧收尾（§5.7.2 的趋势叙述、Table 18 表注、回复信 R1-C5）。
+
+**常见问题：**
+
+- *中途中断*：直接重跑同一脚本。运行目录名固定为 `e7_c4_run1` / `e7_c5_run1`，
+  重跑覆盖同名目录，不会堆积出 `_run2`。
+- *只想先跑一个*：`CONFIGS` 里只留 `e7_c4` 那一行，跑完再放开 `e7_c5`。
+- *没有 GPU*：同样能跑但以天计。这种情况下更合理的选择是不跑，
+  保留 Table 18 的 `--` 与表注说明——这在投稿上也站得住。
+- *数值方向*：不要预设。现有趋势是 C 增大 SAPPO 变差（1557.1 → 1879.5 → 1912.0），
+  但跑出什么就报什么；若 C = 4/5 出现反超最优规则的情况，
+  §5.7.2 与结论 limitations 第三条都需要按实际结果重写。
 
 ### E8 中部横通道布局变体（R1.3）
 
